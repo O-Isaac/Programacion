@@ -15,6 +15,7 @@ import java.util.logging.Logger;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
 
 /**
@@ -66,7 +67,11 @@ public class FileController {
         return new ArrayList();
     }
     
-    
+    /**
+     * Patro glob para obtener archivos del directorio.
+     * @param glob
+     * @return 
+     */
     public List<Path> glob(String glob) {
         Path main = this.path;
         PathMatcher pathMatcher = FileSystems
@@ -106,6 +111,31 @@ public class FileController {
         return elements;
     }
     
+    /**
+     * List file in nested directory using glob function and file attribute view
+     * @param globPattern 
+     */
+    public void listGlobDirectory(String globPattern) {
+        List<Path> globFiles = glob(globPattern);
+        
+        for (Path file : globFiles) {
+            try {
+                BasicFileAttributeView attrview = Files.getFileAttributeView(path, BasicFileAttributeView.class);
+                BasicFileAttributes attr = attrview.readAttributes();
+                System.out.printf("[!] Name=%s, size=%s, absolute=", file.getFileName(), attr.size(), file.toAbsolutePath());
+            }            
+            catch (IOException ex) {
+                LOG.log(Level.SEVERE, "Error al obtener los archivos del directorio {0}", path);
+                LOG.log(Level.SEVERE, null, ex);
+            }
+        }
+        
+    }
+    
+    
+    /**
+     * Elimina recursivamente todos los archivos del directorio!
+     **/
     public void fullDelete() {
         List<Path> DirectoriesFiles = glob("*/**");
         
