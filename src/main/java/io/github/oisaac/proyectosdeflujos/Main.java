@@ -29,9 +29,9 @@ public class Main {
             nombres[i] = scanner.nextLine();
         }
         
-        System.out.println("+----------+-------------+-----------+");
-        System.out.println("| Edad     | Nombre      | Fecha     |");
-        System.out.println("+----------+-------------+-----------+");
+        System.out.format("+----------+-------------+-----------+%n");
+        System.out.format("| Edad     | Nombre      | Fecha     |%n");
+        System.out.format("+----------+-------------+-----------+%n");
 
         for (int i = 0; i <= edades.length - 1; i++) {
             System.out.printf("| %-8d | %-11s | %3$-9tD |%n", edades[i], nombres[i], LocalDate.now());
