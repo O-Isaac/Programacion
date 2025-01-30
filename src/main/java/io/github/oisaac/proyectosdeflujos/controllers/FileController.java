@@ -4,7 +4,10 @@
  */
 package io.github.oisaac.proyectosdeflujos.controllers;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
@@ -17,6 +20,9 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
 
 /**
  *
@@ -73,6 +79,10 @@ public class FileController {
      * @return 
      */
     public List<Path> glob(String glob) {
+        return glob(glob, false);
+    }
+    
+    public List<Path> glob(String glob, boolean directories) {
         Path main = this.path;
         PathMatcher pathMatcher = FileSystems
             .getDefault()
@@ -84,10 +94,14 @@ public class FileController {
             Files.walkFileTree(main, new SimpleFileVisitor<Path>() {
                 @Override
                 public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                    // Si el directorio coincide con el patrón, también lo agregamos
+                    if (!directories && Files.isDirectory(path)) {
+                            return FileVisitResult.CONTINUE;
+                    }
+                    
                     if (pathMatcher.matches(dir) && dir != main) {
                         elements.add(dir);
                     }
+                    
                     return FileVisitResult.CONTINUE;
                 }
 
@@ -100,6 +114,7 @@ public class FileController {
                 @Override
                 public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
                     // Prodiamos capturar la excepcion que ha dado el archivo
+                    
                     return FileVisitResult.CONTINUE;
                 }
             });
@@ -132,6 +147,34 @@ public class FileController {
         
     }
     
+    
+    public void catFileDirectories(String globPattern, String outDirectory) {
+        List<Path> globList = glob(globPattern);
+            
+        try (PrintWriter pw = new PrintWriter(outDirectory)) {
+            pw.printf("+------------------------------------------------------------------------------------------------------+-----------------+--------------------------------+-------------------------------------------------------------------------%n");
+            pw.printf("| %-100s | %-15s | %-30s | %-60s%n", "Nombre", "Tamaño", "Creación", "Path");
+            pw.printf("+------------------------------------------------------------------------------------------------------+-----------------+--------------------------------+-------------------------------------------------------------------------%n");
+            for (Path globPath : globList) {
+                BasicFileAttributeView attrview = Files.getFileAttributeView(globPath, BasicFileAttributeView.class);
+                BasicFileAttributes attr = attrview.readAttributes();
+                File file = globPath.toFile();
+                
+                pw.printf("| %-100s | %-15d | %-30tc | %-60s%n",
+                    file.getName(),
+                    attr.size(),
+                    Date.from(attr.creationTime().toInstant()),
+                    file.getAbsolutePath());
+            }
+            
+        } catch (FileNotFoundException ex) {
+            LOG.log(Level.SEVERE, "Archivo no encontrado el log de {0}", path);
+            LOG.log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            LOG.log(Level.SEVERE, "Error al escribir el log de {0}", path);
+            LOG.log(Level.SEVERE, null, ex);
+        }
+    }
     
     /**
      * Elimina recursivamente todos los archivos del directorio!
