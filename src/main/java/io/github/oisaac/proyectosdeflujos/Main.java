@@ -5,6 +5,12 @@
 package io.github.oisaac.proyectosdeflujos;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.util.Date;
 import java.util.Scanner;
 
 /**
@@ -15,27 +21,24 @@ public class Main {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         
-        int[] edades = new int[3];
-        String[] nombres = new String[3];
+        System.out.printf("Introduce la fecha: ");
+        LocalDate localDate = LocalDate.parse(
+            scanner.nextLine()
+        );
         
-      
-        for (int i = 0; i <= edades.length - 1; i++) {
-            System.out.printf("Introduce una edad > ");
-            edades[i] = scanner.nextInt();
-            
-            scanner.nextLine();
-            
-            System.out.printf("Introduce un nombre > ");
-            nombres[i] = scanner.nextLine();
-        }
         
-        System.out.format("+----------+-------------+-----------+%n");
-        System.out.format("| Edad     | Nombre      | Fecha     |%n");
-        System.out.format("+----------+-------------+-----------+%n");
+        
+        System.out.format("+----------+-------------+%n");
+        System.out.format("| Indice   | Formato     |%n");
+        System.out.format("+----------+-------------+%n");
 
-        for (int i = 0; i <= edades.length - 1; i++) {
-            System.out.printf("| %-8d | %-11s | %3$-9tD |%n", edades[i], nombres[i], LocalDate.now());
-        }
         
-        System.out.format("+----------+-------------+-----------+%n");    }
+        Date date = Date.from(
+            localDate.atTime(LocalTime.now()).toInstant(ZoneOffset.UTC)
+        );
+        
+        System.out.printf("| %-8d | %-11tc |%n", 1, date);
+        System.out.printf("| %-8d | %-11tD |%n", 1, localDate);
+
+        System.out.format("+----------+-------------+%n");    }
 }
