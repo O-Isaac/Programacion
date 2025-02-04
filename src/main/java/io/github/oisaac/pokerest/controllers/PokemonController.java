@@ -2,13 +2,11 @@ package io.github.oisaac.pokerest.controllers;
 
 import io.github.oisaac.pokerest.models.PokemonModel;
 import io.github.oisaac.pokerest.services.PokemonService;
-import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/pokemon")
