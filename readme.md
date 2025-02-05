@@ -31,7 +31,7 @@ La API expone los siguientes endpoints:
 ### Pasos para ejecutar el proyecto
 1. Clona este repositorio:
    ```sh
-   git clone https://github.com/tuusuario/crud-java-pokemon.git
+   git clone https://github.com/O-Isaac/Programacion.git
    ```
 2. Configura la conexión a MySQL en `application.properties`:
    ```properties
