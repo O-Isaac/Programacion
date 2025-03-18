@@ -4,36 +4,29 @@
  */
 package io.github.oisaac.editordearchivos;
 
-import io.github.oisaac.editordearchivos.logica.JFileController;
-import javax.swing.JFileChooser;
+import io.github.oisaac.editordearchivos.logica.JGUIController;
+import io.github.oisaac.editordearchivos.logica.JIOController;
 import java.io.File;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.JOptionPane;
-import javax.swing.filechooser.FileNameExtensionFilter;
+
 
 /**
  *
  * @author Isaac
  */
 public class EditorArchivos extends javax.swing.JFrame {
-    private final JFileController JCONTROLLER = new JFileController(null);
-    private final JFileChooser JCHOOSER = new JFileChooser();
-
+    private final JIOController JCONTROLLER = new JIOController(null);
+    private final JGUIController JGUI = new JGUIController(this);
+    private boolean anexarArchivos = false;
+    
     /**
      * Creates new form EditorArchivos
      */
     public EditorArchivos() {
-        setFiltersForChooser();
         initComponents();
     }
 
-    private void setFiltersForChooser() {
-        JCHOOSER.setAcceptAllFileFilterUsed(false);
-        JCHOOSER.addChoosableFileFilter(new FileNameExtensionFilter("Textos", "txt", "docx"));
-        JCHOOSER.addChoosableFileFilter(new FileNameExtensionFilter("Imágenes", "jpg", "gif"));
-    }
+  
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -51,6 +44,7 @@ public class EditorArchivos extends javax.swing.JFrame {
         path = new javax.swing.JLabel();
         abrir = new javax.swing.JButton();
         guardar = new javax.swing.JButton();
+        checkAnexar = new javax.swing.JCheckBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -81,6 +75,13 @@ public class EditorArchivos extends javax.swing.JFrame {
             }
         });
 
+        checkAnexar.setText("Anexar");
+        checkAnexar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                checkAnexarActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -98,7 +99,9 @@ public class EditorArchivos extends javax.swing.JFrame {
                             .addGroup(jPanel1Layout.createSequentialGroup()
                                 .addComponent(guardar)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(limpiar)))
+                                .addComponent(limpiar)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(checkAnexar)))
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
@@ -114,7 +117,8 @@ public class EditorArchivos extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(guardar)
-                    .addComponent(limpiar))
+                    .addComponent(limpiar)
+                    .addComponent(checkAnexar))
                 .addContainerGap())
         );
 
@@ -133,59 +137,50 @@ public class EditorArchivos extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void abrirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_abrirActionPerformed
-        // Preguntamos archivos
-        int seleccion = JCHOOSER.showOpenDialog(this);
-
-        // Si el usuario, seleciona el archivo!
-        if (seleccion == JFileChooser.APPROVE_OPTION) {
-            File selectedFile = JCHOOSER.getSelectedFile();
-
-            // Comprobar que es .txt
-            if (!selectedFile.getName().endsWith(".txt")) {
-                JOptionPane.showMessageDialog(this, "Solo se admite archivos txt", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            JCONTROLLER.setFile(selectedFile);
-
-            path.setText(selectedFile.getAbsolutePath());
+        File file = JGUI.getFileFromDialog();
+        
+        if (file != null) {
+            JCONTROLLER.setFile(file);
+            path.setText(file.getAbsolutePath());
 
             try {
-                content.setText(JCONTROLLER.leerFile());
+                if (anexarArchivos) {
+                    content.append(JCONTROLLER.read());
+                } else {
+                    content.setText(JCONTROLLER.read());
+                }
             } catch (IOException ex) {
-                Logger.getLogger(EditorArchivos.class.getName()).log(Level.SEVERE, null, ex);
+                JGUI.showAlert("Error", ex.getMessage(), JGUIController.AlertType.ERROR);
             }
         }
-
     }//GEN-LAST:event_abrirActionPerformed
 
     private void guardarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_guardarActionPerformed
-        int seleccion = JCHOOSER.showSaveDialog(content);
-        // int dialogResult = JOptionPane.showConfirmDialog (null, "Would You Like to Save your Previous Note First?","Warning", JOptionPane.YES_NO_OPTION);
+        File file = JGUI.GetFileFromSaveDialog();
+        
+        try {
+            if (JCONTROLLER.getFile().equals(file)) {
+                boolean replace = JGUI.getBooleanFromDialog("Aviso", "Estas segurio que quieres remplazar el archivo");
 
-        if (seleccion == JFileChooser.APPROVE_OPTION) {
-            File fichero = JCHOOSER.getSelectedFile();
-
-            int dialogResult = JOptionPane.YES_OPTION;
-
-            // Si el archivo es igual al editado, ¿Quieres Remplazar?
-            if (JCONTROLLER.getFile().equals(fichero)) {
-                dialogResult = JOptionPane.showConfirmDialog(this, "Estas seguro que quieres remplazar el archivo", "Aviso", JOptionPane.YES_NO_OPTION);
-            }
-
-            if (dialogResult == JOptionPane.YES_OPTION) {
-                try {
-                    JCONTROLLER.escribirArchivo(content.getText(), fichero);
-                } catch (IOException ex) {
-                    Logger.getLogger(EditorArchivos.class.getName()).log(Level.SEVERE, null, ex);
+                if (replace) {
+                    JCONTROLLER.write(content.getText(), file, false);
                 }
-            }
+            } else {
+                JCONTROLLER.write(content.getText(), file, false);
+            }    
+        } catch (IOException ex) {
+            JGUI.showAlert("Error", ex.getMessage(), JGUIController.AlertType.ERROR);
         }
+        
     }//GEN-LAST:event_guardarActionPerformed
 
     private void limpiarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_limpiarActionPerformed
         content.setText(null);
     }//GEN-LAST:event_limpiarActionPerformed
+
+    private void checkAnexarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkAnexarActionPerformed
+        anexarArchivos = !anexarArchivos;
+    }//GEN-LAST:event_checkAnexarActionPerformed
 
     /**
      * @param args the command line arguments
@@ -224,6 +219,7 @@ public class EditorArchivos extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton abrir;
+    private javax.swing.JCheckBox checkAnexar;
     private javax.swing.JTextArea content;
     private javax.swing.JButton guardar;
     private javax.swing.JPanel jPanel1;
